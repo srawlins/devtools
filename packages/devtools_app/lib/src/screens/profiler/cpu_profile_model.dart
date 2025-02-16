@@ -954,33 +954,24 @@ class CpuStackFrame extends TreeNode<CpuStackFrame>
   /// samples are being grouped by tag.
   final bool isTag;
 
-  bool get isNative =>
-      _isNative ??=
-          id != CpuProfileData.rootId &&
-          packageUri.isEmpty &&
-          !name.startsWith(PackagePrefixes.flutterEngine) &&
-          !isTag;
+  late final bool isNative =
+      id != CpuProfileData.rootId &&
+      packageUri.isEmpty &&
+      !name.startsWith(PackagePrefixes.flutterEngine) &&
+      !isTag;
 
-  bool? _isNative;
+  late final bool isDartCore =
+      packageUri.startsWith(PackagePrefixes.dart) &&
+      !packageUri.startsWith(PackagePrefixes.dartUi);
 
-  bool get isDartCore =>
-      _isDartCore ??=
-          packageUri.startsWith(PackagePrefixes.dart) &&
-          !packageUri.startsWith(PackagePrefixes.dartUi);
-
-  bool? _isDartCore;
-
-  bool get isFlutterCore =>
-      _isFlutterCore ??=
-          packageUri.startsWith(PackagePrefixes.flutterPackage) ||
-          name.startsWith(PackagePrefixes.flutterEngine) ||
-          packageUri.startsWith(PackagePrefixes.dartUi);
-
-  bool? _isFlutterCore;
+  late final bool isFlutterCore =
+      packageUri.startsWith(PackagePrefixes.flutterPackage) ||
+      name.startsWith(PackagePrefixes.flutterEngine) ||
+      packageUri.startsWith(PackagePrefixes.dartUi);
 
   @override
   String get tooltip {
-    var prefix = '';
+    final String prefix;
     if (isNative) {
       prefix = '[Native]';
     } else if (isDartCore) {
@@ -989,10 +980,11 @@ class CpuStackFrame extends TreeNode<CpuStackFrame>
       prefix = '[Flutter]';
     } else if (isTag) {
       prefix = '[Tag]';
+    } else {
+      prefix = '';
     }
-    final nameWithPrefix = [prefix, name].join(' ');
     return [
-      nameWithPrefix,
+      '$prefix $name',
       durationText(totalTime),
       if (packageUriWithSourceLine.isNotEmpty) packageUriWithSourceLine,
     ].join(' - ');
