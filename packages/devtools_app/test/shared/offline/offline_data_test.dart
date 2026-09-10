@@ -17,7 +17,11 @@ class _TestScreenController extends DevToolsScreenController
   @override
   String get screenId => 'test_screen';
 
-  Future<bool> initOfflineData(String screenId, {bool shouldLoad = true}) {
+  Future<bool> initOfflineData(
+    String screenId, {
+    bool shouldLoad = true,
+    bool throwOnLoad = false,
+  }) {
     return maybeLoadOfflineData(
       screenId,
       createData: (json) {
@@ -28,6 +32,9 @@ class _TestScreenController extends DevToolsScreenController
       },
       shouldLoad: (data) => shouldLoad && data.isNotEmpty,
       loadData: (data) {
+        if (throwOnLoad) {
+          throw Exception('Failed during loadData');
+        }
         loadedData = data;
       },
     );
@@ -125,6 +132,31 @@ void main() {
         contains('Failed to load offline data for screen \'test_screen\':'),
       );
     });
+
+    test(
+      'resets loadingOfflineData and notifies when loadData throws',
+      () async {
+        offlineDataController
+          ..startShowingOfflineData(offlineApp: MockConnectedApp())
+          ..offlineDataJson = {
+            DevToolsExportKeys.activeScreenId.name: 'test_screen',
+            'test_screen': {'key': 'value'},
+          };
+
+        expect(controller.loadingOfflineData.value, isFalse);
+        final result = await controller.initOfflineData(
+          'test_screen',
+          throwOnLoad: true,
+        );
+        expect(result, isFalse);
+        expect(controller.loadingOfflineData.value, isFalse);
+        expect(notifications.activeMessages.length, equals(1));
+        expect(
+          notifications.activeMessages.first.text,
+          contains('Failed to load offline data for screen \'test_screen\':'),
+        );
+      },
+    );
 
     test(
       'returns false without notifying if screen is not in offlineDataJson',

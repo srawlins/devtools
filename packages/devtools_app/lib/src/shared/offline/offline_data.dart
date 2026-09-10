@@ -191,9 +191,17 @@ mixin OfflineScreenControllerMixin<T>
 
       if (shouldLoad(screenData)) {
         _loadingOfflineData.value = true;
-        await loadData(screenData);
-        _loadingOfflineData.value = false;
-        return true;
+        try {
+          await loadData(screenData);
+          return true;
+        } catch (e, st) {
+          _log.shout('Error loading offline data for $screenId', e, st);
+          notificationService.push(
+            'Failed to load offline data for screen \'$screenId\': $e',
+          );
+        } finally {
+          _loadingOfflineData.value = false;
+        }
       } else {
         notificationService.push(
           'The imported file does not contain any data for screen \'$screenId\'.',

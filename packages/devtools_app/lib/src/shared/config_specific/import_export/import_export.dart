@@ -122,8 +122,10 @@ extension type _DevToolsOfflineData(Map<String, Object?> json) {
     return connectedApp == null ? {} : connectedApp.cast<String, Object?>();
   }
 
-  String? get activeScreenId =>
-      json[DevToolsExportKeys.activeScreenId.name] as String?;
+  String? get activeScreenId {
+    final value = json[DevToolsExportKeys.activeScreenId.name];
+    return value is String ? value : null;
+  }
 }
 
 enum ExportFileType {
